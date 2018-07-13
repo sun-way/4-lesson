@@ -1,51 +1,54 @@
 <?php
+//$url='http://api.openweathermap.org/data/2.5/find?q=Moscow,RU&type=like&APPID=3a41967d489d2595e96206e848c4f0c4';
 
-// формируем урл для запроса для Москвы
-$url='http://api.openweathermap.org/data/2.5/find?q=Moscow,RU&type=like&APPID=3a41967d489d2595e96206e848c4f0c4';
-
-$data = file_get_contents($url);
-// если получили данные
-if($data){
-    // декодируем полученные данные
-    $dataJson = json_decode($data);
-    // получаем только нужные данные
-    $arrayDays = $dataJson->list;
-    // выводим данные
-    foreach($arrayDays as $oneDay){
-        echo'<h2>Погода в Москве</h2>';
-        $date= date("d.m.Y", $oneDay->dt); //Дата
-        echo "Дата: " . $date, "<br/>";
-
-        // температура  днем
-        $temp1=$oneDay->main->temp_max;
-        $temp_ma=$temp1-273;
-        $temp_ma=round($temp_ma,0);
-        echo "максим темп-ра: " .$temp_ma . " °C" ."<br/>";
-
-        // температура Но4ью
-        $temp2=$oneDay->main->temp_min;
-        $temp_mi=$temp2-273;
-        $temp_mi=round($temp_mi,0);
-        echo "миним темп-ра: " .$temp_mi." °C" ."<br/>";
-
-        echo "Погода: " . $oneDay->weather[0]->description . "<br/>";
-
-        $press=$oneDay->main->pressure;
-        $press=$press/1.33333333;
-        $press=round($press,1);
-        echo "Давление: " . $press . "  мм.рт.ст". "<br/>";
-        echo "Влажность: " . $oneDay->main->humidity . "<br/>";
-
-        $temp3=$oneDay->main->temp;
-        $temp_ob=$temp3-273;
-        $temp_ob=round($temp_ob,0);
-        echo "Текущая  температура: " .$temp_ob." °C" ."<br/>";
-        echo "<hr/>";
-    }
-}else{
-    echo "Сервер не доступен!";
-}
-
-
-
+$link = 'http://api.openweathermap.org/data/2.5/weather';
+//$apiKey0 = 'e355704a95bf17365dabbacffce37ad0';
+$apiKey='f3d4855cbacbc20a8845e49073b854df';
+$city = 'London';
+$units = 'metric';
+$url = "{$link}?q={$city}&units={$units}&appid={$apiKey}";
+$data= file_get_contents( __DIR__.'/v.json');
+$dataJson = json_decode($data,true);
 ?>
+
+<html lang="ru">
+<head>
+    <title>home</title>
+    <meta charset="utf-8">
+</head>
+<body>
+<table border="1">
+    <thead>
+    <tr>
+        <td>Погода</td>
+        <td>Темпиратура</td>
+        <td>Темпиратура минимум</td>
+        <td>Температура максимум</td>
+        <td>Давление</td>
+        <td>Влажность</td>
+    </tr>
+    </thead>
+    <tbody>
+<?php foreach ($dataJson as $list=> $value) {?>
+<?php if (!(empty($value))) { echo 'Нет данных  в  ' .$list .  '<br>'; }?>
+<?php foreach ($value as $val) { ?>
+<?php if (!(empty($val) )) { ?>
+        <tr>
+            <td> <?php  echo (isset( $val['weather'][0]['description'])) ? 'Погода::  '. ($val['weather'][0]['description']) :  'Ошибка декодирования json' ?></td>
+            <td> <?php echo (isset( $val['main']['temp'])) ? 'Температура::  '.($val['main']['temp']-273)  :  'не удалось получить температуру' ?></td>
+            <td> <?php echo (isset( $val['main']['temp_min'])) ? 'Температура минимум::  '. ($val['main']['temp_min']-273).'°C':  'не удалось получить температуру min' ?></td>
+            <td> <?php echo (isset( $val['main']['temp_max'])) ? 'Температура максимум::  '. ($val['main']['temp_max']-273).'°C':  'не удалось получить температуру maх' ?></td>
+            <td> <?php echo (isset( $val['main']['pressure'])) ? 'Давление::  '. (round(($val['main']['pressure']/1.3333),0)).' мм.рт.ст':  'не удалось получить давление' ?></td>
+            <td> <?php echo (isset( $val['main']['humidity'])) ? 'Влажность::  '.($val['main']['humidity'])  :  'не удалось получить влажность' ?></td>
+        <tr>
+    <?php }
+    else { exit('Ошибка '); } }?>
+    <?php } ?>
+    </tbody>
+</table>
+
+</body>
+</html>
+
+
+
