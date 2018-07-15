@@ -1,54 +1,85 @@
 <?php
-//$url='http://api.openweathermap.org/data/2.5/find?q=Moscow,RU&type=like&APPID=3a41967d489d2595e96206e848c4f0c4';
+$apiConfig = [
+    'key' => '059d32e4933efe1aad5128e726d200c3',
+    'url' => 'http://api.openweathermap.org/data/2.5/weather',
+    'cityID' => 524901, // Moscow
+    'units'=>'metric',
+    'cityName'=>'Moscow',
+];
+if (isset($apiConfig['cityID'])) {
+    $cityID = $apiConfig['cityID'];
+} else {
+    echo 'не  удалось  получить данные';
+}
+if (isset($apiConfig['cityName'])) {
+    $cityID = $apiConfig['cityName'];
+} else {
+    echo 'не  удалось  получить данные';
+}
+$Url = "{$apiConfig['url']}?q={$apiConfig['cityName']}&units={$apiConfig['units']}&appid={$apiConfig['key']}";
+$JSON = file_get_contents($Url);
+if ($JSON !== false) {
+    $responseArray = json_decode($JSON, true);
+} else {
+    exit('Невозможно получить данные с сервера');
+}
+if ($responseArray === null) {
+    exit('Не возможно преобразовать данные из JSON');
+}
+$weather = $responseArray['weather'][0]['main'];
+$temp = $responseArray['main']['temp'];
+$windSpeed = $responseArray['wind']['speed'];
+$windpressure = $responseArray['main']['pressure'];
+$responseData = [];
+$responseData[] = labelDataFactory('Погода', $weather);
+$responseData[] = labelDataFactory('Температура', $temp);
+$responseData[] = labelDataFactory('Ветер (скорость)', $windSpeed);
+$responseData[] = labelDataFactory('Давление', $windpressure);
+function taginator($tagname, $data,  $label = '') {
+    if (empty($data)) {
+        echo 'неуда4а';
+    }
+    echo "<$tagname>";
 
-$link = 'http://api.openweathermap.org/data/2.5/weather';
-//$apiKey0 = 'e355704a95bf17365dabbacffce37ad0';
-$apiKey='f3d4855cbacbc20a8845e49073b854df';
-$city = 'London';
-$units = 'metric';
-$url = "{$link}?q={$city}&units={$units}&appid={$apiKey}";
-$data= file_get_contents( __DIR__.'/v.json');
-$dataJson = json_decode($data,true);
+    if ($label) {
+        echo "$label";
+    }
+    if (($tagname === 'ol' || $tagname === 'ul') && gettype($data) === 'array') {
+        foreach ($data as $dataPice) {
+            if (empty($dataPice)) {
+                break;
+            }
+            echo '<li>', $dataPice['label'], ': ', $dataPice['data'], '</li>';
+        }
+    } else {
+      echo $data;
+    }
+    echo "</$tagname>";
+}
+
+function labelDataFactory($label, $data) {
+   if (empty($data)) {
+        echo 'не  удалось  получить данные';
+   }
+    return [
+     'label' => $label,
+        'data' => $data,
+   ];
+}
 ?>
 
-<html lang="ru">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>home</title>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Weather</title>
 </head>
 <body>
-<table border="1">
-    <thead>
-    <tr>
-        <td>Погода</td>
-        <td>Темпиратура</td>
-        <td>Темпиратура минимум</td>
-        <td>Температура максимум</td>
-        <td>Давление</td>
-        <td>Влажность</td>
-    </tr>
-    </thead>
-    <tbody>
-<?php foreach ($dataJson as $list=> $value) {?>
-<?php if (!(empty($value))) { echo 'Нет данных  в  ' .$list .  '<br>'; }?>
-<?php foreach ($value as $val) { ?>
-<?php if (!(empty($val) )) { ?>
-        <tr>
-            <td> <?php  echo (isset( $val['weather'][0]['description'])) ? 'Погода::  '. ($val['weather'][0]['description']) :  'Ошибка декодирования json' ?></td>
-            <td> <?php echo (isset( $val['main']['temp'])) ? 'Температура::  '.($val['main']['temp']-273)  :  'не удалось получить температуру' ?></td>
-            <td> <?php echo (isset( $val['main']['temp_min'])) ? 'Температура минимум::  '. ($val['main']['temp_min']-273).'°C':  'не удалось получить температуру min' ?></td>
-            <td> <?php echo (isset( $val['main']['temp_max'])) ? 'Температура максимум::  '. ($val['main']['temp_max']-273).'°C':  'не удалось получить температуру maх' ?></td>
-            <td> <?php echo (isset( $val['main']['pressure'])) ? 'Давление::  '. (round(($val['main']['pressure']/1.3333),0)).' мм.рт.ст':  'не удалось получить давление' ?></td>
-            <td> <?php echo (isset( $val['main']['humidity'])) ? 'Влажность::  '.($val['main']['humidity'])  :  'не удалось получить влажность' ?></td>
-        <tr>
-    <?php }
-    else { exit('Ошибка '); } }?>
-    <?php } ?>
-    </tbody>
-</table>
-
+    <?php
+       taginator('h2', $responseArray['name'], 'Город: ');
+       taginator('ul', $responseData);
+    ?>
 </body>
 </html>
-
-
-
